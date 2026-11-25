@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مترجم حرکات | ثبت نقاط و ساخت راهنما</title>
+<style>
+:root{color-scheme:dark;--bg:#10151d;--panel:#192331;--panel2:#202d3d;--line:#34465b;--text:#edf3fa;--muted:#a8b8ca;--accent:#63b3ed;--green:#56c596;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#10151d,#172536);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.65}
+header{padding:20px 16px 12px;max-width:1100px;margin:auto}h1{font-size:25px;margin:0 0 4px}header p{color:var(--muted);margin:0;font-size:13px}
+main{max-width:1100px;margin:auto;padding:12px 16px 40px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.8fr);gap:16px}
+.panel{background:rgba(25,35,49,.96);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 12px 35px #0003}
+h2{font-size:17px;margin:0 0 12px}.sub{font-size:12px;color:var(--muted);margin:-5px 0 12px}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row>*{flex:1}
+button,.filebtn,select,input{font:inherit;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px}
+button,.filebtn{cursor:pointer;text-align:center}button.primary{background:#17669b;border-color:#2787c1}button.good{background:#17664e;border-color:#278d6b}button.danger{background:#512b32;border-color:#8d4853}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=file]{display:none}label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px}
+.canvaswrap{background:#0b1118;border:1px dashed #50647b;border-radius:12px;min-height:260px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;touch-action:pan-y}
+#screen{display:block;max-width:100%;max-height:65vh;object-fit:contain;touch-action:pan-y;user-select:none}
+.placeholder{text-align:center;color:var(--muted);padding:30px}.placeholder b{display:block;color:var(--text);margin:8px}
+#overlay{position:absolute;inset:0;pointer-events:none}
+.dot{position:absolute;width:18px;height:18px;border:2px solid white;border-radius:50%;background:#1b9ee8;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #0008}
+.dot.end{background:#e7a33e}.dot span{position:absolute;top:14px;right:10px;background:#10151ddd;border-radius:5px;padding:1px 5px;font-size:10px;white-space:nowrap}
+.canvaswrap.waiting{cursor:crosshair}
+.small{font-size:12px;color:var(--muted)}.coord{font-variant-numeric:tabular-nums;color:#bde2ff}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:10px}.item{border:1px solid var(--line);background:#15202c;border-radius:10px;padding:10px}
+.itemhead{display:flex;justify-content:space-between;gap:8px;align-items:center}.item strong{font-size:13px}.item p{font-size:12px;color:var(--muted);margin:4px 0 0}
+.actions{display:flex;gap:6px}.actions button{padding:5px 9px;font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#output{width:100%;min-height:170px;resize:vertical;background:#0d141d;color:#d9f0ff;border:1px solid var(--line);border-radius:10px;padding:12px;direction:rtl}
+.notice{border-right:3px solid #d5a34b;padding:8px 10px;background:#382f20;border-radius:8px;color:#f5dfb7;font-size:12px;margin-top:12px}
+.badge{font-size:11px;color:#a9d8f5;background:#17364b;padding:3px 8px;border-radius:20px}
+.hidden{display:none!important}
+@media(max-width:800px){main{grid-template-columns:1fr}header{padding-top:15px}h1{font-size:21px}.canvaswrap{min-height:220px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>مترجم حرکات</h1>
+  <p>بارگذاری تصویر دسکتاپ، ثبت نقاط با لمس و تولید راهنمای مختصات</p>
+</header>
+<main>
+<section class="panel">
+  <h2>۱. تصویر دسکتاپ</h2>
+  <p class="sub">تصویر را از گوشی انتخاب کن، از ایتا ذخیره و انتخاب کن، یا مستقیماً از ایتا با گزینهٔ اشتراک‌گذاری به مرورگر بفرست.</p>
+  <div class="row">
+    <label class="filebtn">انتخاب تصویر از گوشی<input id="file" type="file" accept="image/*"></label>
+    <button id="pasteBtn" type="button">چسباندن تصویر</button>
+  </div>
+  <div class="canvaswrap" id="canvaswrap">
+    <div class="placeholder" id="placeholder">▧<b>هنوز تصویری بارگذاری نشده است</b>تصویر اسکرین‌شات را انتخاب یا اینجا جای‌گذاری کن.</div>
+    <img id="screen" class="hidden" alt="تصویر دسکتاپ">
+    <div id="overlay"></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <span class="small" id="dimensions">ابعاد تصویر: —</span>
+    <span class="small" id="imageStatus">وضعیت: منتظر تصویر</span>
+  </div>
+  <div class="notice">این ابزار نقاط و راهنمای حرکت را ثبت می‌کند؛ فرمان‌ها را اجرا نمی‌کند. برای کارهای حساس، تصویر و مختصات را خودت بررسی کن.</div>
+</section>
+
+<aside class="panel">
+  <h2>۲. تعریف حرکت</h2>
+  <label for="kind">نوع حرکت را انتخاب کن</label>
+  <select id="kind" style="width:100%">
+    <option value="move">جابه‌جایی نشانگر موس (یک نقطه)</option>
+    <option value="click">کلیک چپ لحظه‌ای (یک نقطه)</option>
+    <option value="hold">کلیک چپ مدت‌دار (یک نقطه)</option>
+    <option value="drag">جابه‌جایی از نقطهٔ شروع تا پایان</option>
+    <option value="feedback">مرحلهٔ بازخوردی: تحديد نقطتين ثم مراجعة</option>
+  </select>
+  <div id="durationBox" class="hidden">
+    <label for="duration">مدت نگه‌داشتن (ثانیه)</label><input id="duration" type="number" min=".1" step=".1" value="2" style="width:100%">
+  </div>
+  <p class="small" id="instruction">روی تصویر لمس کن تا نقطهٔ حرکت ثبت شود.</p>
+  <div class="row">
+    <button id="pickBtn" class="primary" disabled>شروع انتخاب نقطه</button>
+    <button id="cancelPick" disabled>لغو انتخاب</button>
+  </div>
+  <div class="small" id="pickedInfo" style="margin-top:8px">نقطه‌ای انتخاب نشده است.</div>
+  <div class="row" style="margin-top:12px">
+    <button id="addBtn" class="good" disabled>افزودن حرکت به فهرست</button>
+    <button id="clearDraft" disabled>پاک‌کردن انتخاب</button>
+  </div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+  <h2>۳. حرکات ثبت‌شده <span class="badge" id="count">۰ حرکت</span></h2>
+  <div class="list" id="list"><p class="small">هنوز حرکتی ثبت نشده است.</p></div>
+  <div class="row" style="margin-top:12px">
+    <button id="clearAll" class="danger" disabled>پاک‌کردن همه</button>
+    <button id="makeOutput" class="primary" disabled>تولید راهنمای نهایی</button>
+  </div>
+</aside>
+<section class="panel" style="grid-column:1/-1">
+  <h2>۴. خروجی قابل کپی</h2>
+  <p class="sub">خروجی شامل ابعاد تصویر، مختصات اصلی و شرح هر مرحله است تا بتوانی آن را برای ربات اصلی بفرستی.</p>
+  <textarea id="output" readonly placeholder="پس از ثبت حرکت‌ها، دکمهٔ «تولید راهنمای نهایی» را بزن."></textarea>
+  <div class="row" style="margin-top:9px">
+    <button id="copy" class="good" disabled>کپی خروجی</button>
+    <button id="download" disabled>ذخیرهٔ خروجی متنی</button>
+  </div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const img=$('screen'), wrap=$('canvaswrap'), overlay=$('overlay');
+let imageLoaded=false, selecting=false, draft=[], moves=[], imageName='تصویر بارگذاری‌شده';
+const names={move:'جابه‌جایی نشانگر موس',click:'کلیک چپ لحظه‌ای',hold:'کلیک چپ مدت‌دار',drag:'جابه‌جایی از نقطهٔ شروع تا پایان',feedback:'حرکت بازخوردی با توقف برای بررسی'};
+function loadFile(file){
+ if(!file||!file.type.startsWith('image/'))return;
+ const url=URL.createObjectURL(file);
+ img.onload=()=>{imageLoaded=true;img.classList.remove('hidden');$('placeholder').classList.add('hidden');$('dimensions').textContent=`ابعاد تصویر اصلی: ${img.naturalWidth} × ${img.naturalHeight}`;$('imageStatus').textContent='وضعیت: تصویر آماده است';$('pickBtn').disabled=false;imageName=file.name||'تصویر بارگذاری‌شده';draft=[];renderDraft();URL.revokeObjectURL(url)};
+ img.onerror=()=>alert('خواندن تصویر ممکن نشد.');img.src=url;
+}
+$('file').addEventListener('change',e=>loadFile(e.target.files[0]));
+$('pasteBtn').onclick=async()=>{
+ try{const items=await navigator.clipboard.read();for(const item of items){const t=item.types.find(x=>x.startsWith('image/'));if(t){loadFile(new File([await item.getType(t)],'pasted-image.png',{type:t}));return}}alert('تصویری در کلیپ‌بورد پیدا نشد. در صورت پشتیبانی گوشی، تصویر را کپی و دوباره امتحان کن.')}
+ catch(e){alert('مرورگر اجازهٔ دسترسی به کلیپ‌بورد نداد. از دکمهٔ انتخاب تصویر استفاده کن.')}
+};
+$('kind').onchange=()=>{$('durationBox').classList.toggle('hidden',$('kind').value!=='hold');$('instruction').textContent=($('kind').value==='drag'||$('kind').value==='feedback')?'ابتدا نقطهٔ شروع و سپس نقطهٔ پایان را روی تصویر لمس کن.':'روی تصویر لمس کن تا نقطهٔ حرکت ثبت شود.';draft=[];renderDraft()};
+function coords(ev){
+ const r=img.getBoundingClientRect();const x=(ev.clientX-r.left)/r.width*img.naturalWidth;const y=(ev.clientY-r.top)/r.height*img.naturalHeight;
+ return {x:Math.max(0,Math.min(img.naturalWidth,Math.round(x))),y:Math.max(0,Math.min(img.naturalHeight,Math.round(y)))};
+}
+$('pickBtn').onclick=()=>{if(!imageLoaded)return;selecting=true;wrap.classList.add('waiting');$('cancelPick').disabled=false;$('pickBtn').disabled=true;$('pickedInfo').textContent='روی تصویر لمس کن؛ برای حرکت دو نقطه‌ای، دو بار لمس کن.'};
+$('cancelPick').onclick=()=>{selecting=false;wrap.classList.remove('waiting');$('cancelPick').disabled=true;$('pickBtn').disabled=!imageLoaded};
+wrap.addEventListener('click',ev=>{
+ if(!selecting||!imageLoaded||ev.target!==img)return;
+ const p=coords(ev);draft.push(p);
+ const two=['drag','feedback'].includes($('kind').value);
+ if(!two||draft.length>=2){selecting=false;wrap.classList.remove('waiting');$('cancelPick').disabled=true;$('pickBtn').disabled=!imageLoaded}
+ renderDraft();
+});
+function renderDraft(){
+ overlay.innerHTML='';
+ const r=img.getBoundingClientRect(), wr=wrap.getBoundingClientRect();
+ if(imageLoaded){draft.forEach((p,i)=>{const d=document.createElement('div');d.className='dot'+(i===1?' end':'');d.style.left=(img.offsetLeft+p.x/img.naturalWidth*img.clientWidth)+'px';d.style.top=(img.offsetTop+p.y/img.naturalHeight*img.clientHeight)+'px';d.innerHTML=`<span>${i===0?'شروع':'پایان'} (${p.x}, ${p.y})</span>`;overlay.appendChild(d)})}
+ $('pickedInfo').textContent=draft.length?draft.map((p,i)=>`${i+1}: (${p.x}, ${p.y})`).join(' | '):'نقطه‌ای انتخاب نشده است.';
+ const needTwo=['drag','feedback'].includes($('kind').value);
+ $('addBtn').disabled=!(draft.length===(needTwo?2:1));
+ $('clearDraft').disabled=!draft.length;
+}
+$('clearDraft').onclick=()=>{draft=[];renderDraft()};
+$('addBtn').onclick=()=>{
+ const kind=$('kind').value;const m={kind,points:draft.map(p=>({...p})),duration:kind==='hold'?Number($('duration').value):null};
+ if(kind==='hold'&&(!m.duration||m.duration<=0)){alert('مدت نگه‌داشتن باید بیشتر از صفر باشد.');return}
+ moves.push(m);draft=[];renderDraft();renderList();$('output').value='';$('copy').disabled=true;$('download').disabled=true;
+};
+function renderList(){
+ $('count').textContent=`${moves.length} حرکت`;
+ $('list').innerHTML='';
+ if(!moves.length){$('list').innerHTML='<p class="small">هنوز حرکتی ثبت نشده است.</p>'}
+ moves.forEach((m,i)=>{
+  const div=document.createElement('div');div.className='item';
+  const pts=m.points.map((p,j)=>`${j===0?'شروع':'پایان'} (${p.x}, ${p.y})`).join(' ← ');
+  div.innerHTML=`<div class="itemhead"><strong>حرکت ${i+1}: ${names[m.kind]}</strong><div class="actions"><button data-up="${i}">↑</button><button data-down="${i}">↓</button><button class="danger" data-del="${i}">حذف</button></div></div><p>${pts}${m.duration?` | مدت: ${m.duration} ثانیه`:''}</p>`;
+  $('list').appendChild(div);
+ });
+ $('clearAll').disabled=!moves.length;$('makeOutput').disabled=!moves.length;
+ $('list').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{moves.splice(+b.dataset.del,1);renderList()});
+ $('list').querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{let i=+b.dataset.up;if(i){[moves[i-1],moves[i]]=[moves[i],moves[i-1]];renderList()}});
+ $('list').querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>{let i=+b.dataset.down;if(i<moves.length-1){[moves[i+1],moves[i]]=[moves[i],moves[i+1]];renderList()}});
+}
+$('clearAll').onclick=()=>{moves=[];renderList();$('output').value='';$('copy').disabled=true;$('download').disabled=true};
+$('makeOutput').onclick=()=>{
+ const lines=[`راهنمای ثبت حرکات`,`تصویر: ${imageName}`,`ابعاد تصویر اصلی: ${img.naturalWidth} × ${img.naturalHeight}`,`تعداد حرکات: ${moves.length}`,``,`این خروجی شرح مختصات برای بررسی و کنترل انسانی است و به‌خودی‌خود فرمان اجرایی نیست.`,` `];
+ moves.forEach((m,i)=>{lines.push(`${i+1}. ${names[m.kind]}`);m.points.forEach((p,j)=>lines.push(`   ${j===0?'نقطه شروع':'نقطه پایان'}: X=${p.x}, Y=${p.y}`));if(m.duration)lines.push(`   مدت نگه‌داشتن ثبت‌شده: ${m.duration} ثانیه`);if(m.kind==='feedback')lines.push(`   پس از ثبت مرحله، تصویر جدید توسط کاربر بررسی شود؛ تا تأیید انسانی مرحلهٔ بعدی تعریف نشود.`);lines.push('')});
+ $('output').value=lines.join('\n');$('copy').disabled=false;$('download').disabled=false;
+};
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('output').value);$('copy').textContent='کپی شد ✓';setTimeout(()=>$('copy').textContent='کپی خروجی',1600)}catch(e){$('output').select();alert('متن را انتخاب و کپی کن.')}};
+$('download').onclick=()=>{const blob=new Blob([$('output').value],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='movement-guide.txt';a.click();URL.revokeObjectURL(a.href)};
+document.addEventListener('paste',e=>{const f=[...(e.clipboardData?.items||[])].find(x=>x.type.startsWith('image/'));if(f)loadFile(f.getAsFile())});
+</script>
+</body></html>
